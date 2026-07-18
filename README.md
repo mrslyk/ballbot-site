@@ -9,6 +9,13 @@ A solar-assisted autonomous robot that finds tennis balls on a court, sweeps the
 - [`index.html`](index.html) — the Ballbot marketing site: how it works, the pickup mechanism, corner handling, the vision brain, electronics & compute, specs, and roadmap.
 - [`design.html`](design.html) — the Version 1 design document: scoping draft with schematics, the compute split, bill of materials, hopper sizing, and open decisions.
 
+Live at **https://mrslyk.github.io/ballbot-site/** (GitHub Pages).
+
+## Reference docs
+
+- [`docs/ballbot_v1_design.md`](docs/ballbot_v1_design.md) — the v1 design document in Markdown (source of truth for the spec).
+- [`docs/ballbot_v1_design.pdf`](docs/ballbot_v1_design.pdf) — the same design document as a PDF.
+
 Both pages are self-contained static HTML (inline CSS + SVG, no build step, no dependencies). Open `index.html` in a browser, or serve the folder with any static file server:
 
 ```sh
