@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ballbot — Version 1 Design</title>
+<style>
+  :root{
+    --ink:#1c2530; --muted:#5b6672; --line:#d9dee5; --bg:#ffffff; --panel:#f6f8fa;
+    --accent:#1f6feb; --ball:#c8e000; --ball-line:#8a9c00; --court:#2f7d5b; --brush:#e0873a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:48px 24px 96px;}
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.5px;}
+  .sub{color:var(--muted);font-size:17px;margin:0 0 4px;}
+  .meta{color:var(--muted);font-size:14px;margin:0 0 32px;}
+  h2{font-size:22px;margin:44px 0 12px;padding-top:20px;border-top:1px solid var(--line);letter-spacing:-.3px;}
+  h3{font-size:17px;margin:26px 0 8px;}
+  p{margin:0 0 14px;}
+  ul{margin:0 0 14px;padding-left:22px;}
+  li{margin:0 0 7px;}
+  strong{color:var(--ink);}
+  figure{margin:22px 0 10px;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;}
+  figcaption{color:var(--muted);font-size:13.5px;margin-top:10px;text-align:center;}
+  svg{display:block;width:100%;height:auto;}
+  .callout{background:#eef4ff;border:1px solid #cfe0ff;border-radius:10px;padding:14px 16px;margin:18px 0;font-size:15px;}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:15px;}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;}
+  th{background:var(--panel);}
+  .lbl{font:600 12px sans-serif;fill:var(--ink);}
+  .lbl-s{font:11px sans-serif;fill:var(--muted);}
+  .dim{font:11px sans-serif;fill:var(--accent);}
+  .lead{stroke:var(--muted);stroke-width:1;fill:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p style="margin:0 0 18px;"><a href="index.html" style="color:var(--accent);text-decoration:none;font-size:14px;">← Back to the Ballbot site</a></p>
+<h1>Ballbot — Version 1 Design</h1>
+<p class="sub">A solar-assisted robot that finds tennis balls on a court, sweeps them into a hopper, and returns to its dock.</p>
+<p class="meta">Prepared for Tim Parsa &amp; Kevin Eisenbacher · July 17, 2026 · v1 concept — scoping draft</p>
+
+<p>The whole game in version 1 is one loop done reliably: <strong>see the balls → drive to them → lift them into a hopper → return to the dock</strong>. Kevin's longer wishlist — serving gun, court squeegee, floor conditioner, debris blower, court-to-court travel — stays the north star but is deferred. This draft focuses on the two things you flagged: the <strong>simplest possible pickup mechanism</strong>, and <strong>how it reaches balls against the fence and in the corners</strong>. Schematics below.</p>
+
+<h2>1. The pickup mechanism — yes, like a bowling alley</h2>
+
+<p>Your instinct is exactly right, and it's the same trick a tennis ball machine already uses in reverse. A ball machine <em>launches</em> a ball by pinching it between <strong>two counter-rotating rubber wheels</strong>. Run those wheels the other direction and they become an <strong>intake</strong>: the ball gets grabbed at the bottom and thrown up a short chute into the hopper. It's the bowling-alley ball-return principle, shrunk to tennis-ball scale — and because ball machines already prove the hardware works at this size, it's low-risk.</p>
+
+<p>How a ball gets from the ground into the hopper, front to back:</p>
+
+<ul>
+  <li><strong>A low scoop lip</strong> at the very front, riding ~2–3 mm off the court on a smooth skid. As the robot drives forward, a resting ball rolls up onto the lip instead of being pushed away.</li>
+  <li><strong>A funnel throat</strong> that narrows from a wide mouth down to the wheel gap, so the ball doesn't need to be perfectly centered — anything in the mouth gets steered into the nip.</li>
+  <li><strong>Two counter-rotating wheels</strong> (~70 mm foam-over-rubber), set a bit <em>closer</em> than a ball is wide (~50–55 mm gap). The ball (65 mm) is squeezed to ~52 mm, the wheels grip it, and their upward-moving faces fling it up the chute.</li>
+  <li><strong>A short curved chute</strong> carries the ball up and over into the hopper. One drive belt can spin both wheels off a single small motor.</li>
+</ul>
+
+<div class="callout"><strong>Why this over a scoop or a plow:</strong> a passive scoop or ramp just shoves a ball ahead of it — the ball rolls away. Anything that reliably moves a ball <em>up and over</em> a lip needs to <em>grip</em> it, and spinning wheels grip. Two wheels and one motor is about as simple as a reliable lift gets.</p></div>
+
+<h3>Simpler fallback: one brush roller</h3>
+<p>If we want to prototype even cheaper first, a single <strong>spinning bristle roller</strong> (like a powered push-sweeper or driving-range collector) can flick balls up the ramp with one motor and no precise gap to tune. It grips a fast, bouncy tennis ball a little less surely than the twin wheels, so the plan is to bench-test both cheaply and keep whichever proves more reliable. Lead design = twin wheels; brush = backup.</p>
+
+<figure>
+<svg viewBox="0 0 760 360" role="img" aria-label="Side cross-section of the intake">
+  <!-- ground -->
+  <line x1="20" y1="300" x2="740" y2="300" stroke="#2f7d5b" stroke-width="3"/>
+  <text x="24" y="318" class="lbl-s">court surface</text>
+
+  <!-- robot body outline -->
+  <path d="M120 300 L120 150 Q120 120 150 120 L560 120 Q600 120 600 160 L600 300 Z"
+        fill="#eef1f4" stroke="#98a3af" stroke-width="2"/>
+  <!-- solar panel on top -->
+  <rect x="210" y="108" width="300" height="12" rx="3" fill="#243447" stroke="#12202e"/>
+  <text x="360" y="102" text-anchor="middle" class="lbl-s">solar panel (trickle)</text>
+
+  <!-- drive wheel rear -->
+  <circle cx="540" cy="300" r="34" fill="#c9d2db" stroke="#7c8894" stroke-width="2"/>
+  <circle cx="540" cy="300" r="9" fill="#7c8894"/>
+  <text x="540" y="350" text-anchor="middle" class="lbl-s">drive wheel</text>
+
+  <!-- battery -->
+  <rect x="430" y="235" width="80" height="45" rx="5" fill="#dfe5ea" stroke="#98a3af"/>
+  <text x="470" y="262" text-anchor="middle" class="lbl-s">battery</text>
+
+  <!-- hopper with balls -->
+  <path d="M300 150 L300 250 L420 250 L420 150" fill="none" stroke="#98a3af" stroke-width="2"/>
+  <text x="360" y="145" text-anchor="middle" class="lbl">hopper</text>
+  <g fill="#c8e000" stroke="#8a9c00">
+    <circle cx="322" cy="235" r="12"/><circle cx="348" cy="238" r="12"/><circle cx="374" cy="235" r="12"/>
+    <circle cx="400" cy="238" r="12"/><circle cx="335" cy="214" r="12"/><circle cx="362" cy="214" r="12"/><circle cx="388" cy="214" r="12"/>
+  </g>
+
+  <!-- scoop lip -->
+  <path d="M120 300 L92 300 L86 292" fill="none" stroke="#5b6672" stroke-width="3"/>
+  <text x="60" y="284" class="lbl-s">scoop lip</text>
+  <path class="lead" d="M92 296 L110 280"/>
+
+  <!-- funnel + wheels -->
+  <!-- chute -->
+  <path d="M150 292 L210 210 L250 190" fill="none" stroke="#b8c0c9" stroke-width="10" stroke-linecap="round"/>
+  <text x="235" y="175" class="lbl-s">chute to hopper</text>
+
+  <!-- two wheels -->
+  <circle cx="165" cy="270" r="26" fill="#3a4756" stroke="#22303e" stroke-width="2"/>
+  <circle cx="205" cy="238" r="26" fill="#3a4756" stroke="#22303e" stroke-width="2"/>
+  <!-- rotation arrows (inner faces move up) -->
+  <path d="M181 252 a20 20 0 0 1 -3 30" fill="none" stroke="#c8e000" stroke-width="3" marker-end="url(#ah)"/>
+  <path d="M221 220 a20 20 0 0 1 -3 30" fill="none" stroke="#c8e000" stroke-width="3" marker-end="url(#ah)"/>
+  <text x="150" y="315" class="lbl">counter-rotating wheels</text>
+
+  <!-- ball at mouth -->
+  <circle cx="150" cy="285" r="15" fill="#c8e000" stroke="#8a9c00" stroke-width="2"/>
+  <path d="M138 279 a15 15 0 0 1 24 0" fill="none" stroke="#fff" stroke-width="1.4"/>
+  <text x="118" y="255" class="lbl-s">ball in →</text>
+
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#c8e000"/>
+    </marker>
+  </defs>
+</svg>
+<figcaption>Side cross-section. Ball rolls onto the scoop lip, gets pinched by the two upward-spinning wheels (the ball-machine trick in reverse), and is flung up the chute into the hopper. One motor drives both wheels.</figcaption>
+</figure>
+
+<h2>2. Reaching balls at the fence and in the corners</h2>
+
+<p>This is the real weakness of any front-mouth collector: it can't push its nose flush into a 90° corner, and a ball hugging the fence sits just outside the intake's path. The fix is borrowed from street sweepers and robot vacuums: <strong>a rotating side-sweeper brush</strong> mounted at the front corner of the robot, sticking out past the body edge.</p>
+
+<ul>
+  <li>The robot runs a <strong>"wall-follow" routine</strong> along the fence when the overhead camera sees balls near it.</li>
+  <li>The angled, vertical-axis <strong>gutter brush</strong> reaches into the corner and against the fence, and <strong>flicks the ball inward</strong> — away from the fence, into the robot's forward path where the twin-wheel intake grabs it.</li>
+  <li>It costs one extra small motor and is a thoroughly proven mechanism (every Roomba and street sweeper uses it).</li>
+</ul>
+
+<p>For a true corner, the robot approaches diagonally so the brush can rake the ball out along one fence line first, then the intake collects it on the follow-through. Balls that are genuinely pinned in the apex are the hardest 1–2% — the brush handles nearly all of them; the rest we accept as a known limit for v1.</p>
+
+<figure>
+<svg viewBox="0 0 760 360" role="img" aria-label="Top view of corner sweep routine">
+  <!-- fence corner -->
+  <line x1="70" y1="40" x2="70" y2="330" stroke="#2f7d5b" stroke-width="6"/>
+  <line x1="70" y1="330" x2="700" y2="330" stroke="#2f7d5b" stroke-width="6"/>
+  <text x="90" y="60" class="lbl-s">fence</text>
+
+  <!-- wall-follow path -->
+  <path d="M150 300 Q150 200 150 150" fill="none" stroke="#1f6feb" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#ah2)"/>
+  <text x="160" y="130" class="dim">wall-follow path</text>
+
+  <!-- robot body -->
+  <rect x="150" y="150" width="150" height="120" rx="14" fill="#eef1f4" stroke="#98a3af" stroke-width="2"/>
+  <text x="225" y="215" text-anchor="middle" class="lbl">Ballbot</text>
+  <!-- intake mouth facing down (front) -->
+  <path d="M182 270 L200 288 L250 288 L268 270 Z" fill="#cfd6dd" stroke="#98a3af"/>
+  <text x="225" y="305" text-anchor="middle" class="lbl-s">intake mouth</text>
+
+  <!-- side brush at front-left corner, reaching toward fence -->
+  <circle cx="120" cy="285" r="30" fill="none" stroke="#e0873a" stroke-width="2"/>
+  <g stroke="#e0873a" stroke-width="3">
+    <line x1="120" y1="285" x2="120" y2="255"/><line x1="120" y1="285" x2="146" y2="270"/>
+    <line x1="120" y1="285" x2="146" y2="300"/><line x1="120" y1="285" x2="120" y2="315"/>
+    <line x1="120" y1="285" x2="94" y2="300"/><line x1="120" y1="285" x2="92" y2="285"/>
+    <line x1="120" y1="285" x2="94" y2="270"/>
+  </g>
+  <path d="M104 268 a26 26 0 0 1 34 6" fill="none" stroke="#e0873a" stroke-width="2.5" marker-end="url(#ah3)"/>
+  <text x="70" y="250" class="lbl" fill="#b3671f">side brush</text>
+
+  <!-- ball in corner, flicked path -->
+  <circle cx="95" cy="312" r="12" fill="#c8e000" stroke="#8a9c00" stroke-width="2"/>
+  <path d="M108 305 Q170 300 210 292" fill="none" stroke="#8a9c00" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ah4)"/>
+  <text x="120" y="345" class="lbl-s">ball flicked inward → into intake path</text>
+
+  <defs>
+    <marker id="ah2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#1f6feb"/></marker>
+    <marker id="ah3" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#e0873a"/></marker>
+    <marker id="ah4" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#8a9c00"/></marker>
+  </defs>
+</svg>
+<figcaption>Top view of the corner routine. The robot follows the fence; the rotating side brush reaches past the body into the corner and flicks the ball inward into the intake's path.</figcaption>
+</figure>
+
+<h2>3. Whole-robot layout (top view)</h2>
+
+<figure>
+<svg viewBox="0 0 760 380" role="img" aria-label="Top view of the robot">
+  <!-- body -->
+  <rect x="230" y="60" width="300" height="260" rx="24" fill="#eef1f4" stroke="#98a3af" stroke-width="2"/>
+  <!-- front label -->
+  <text x="380" y="46" text-anchor="middle" class="lbl-s">FRONT</text>
+
+  <!-- intake funnel at front -->
+  <path d="M300 60 L340 96 L420 96 L460 60 Z" fill="#cfd6dd" stroke="#98a3af"/>
+  <!-- two wheels -->
+  <rect x="342" y="88" width="16" height="34" rx="4" fill="#3a4756"/>
+  <rect x="402" y="88" width="16" height="34" rx="4" fill="#3a4756"/>
+  <text x="380" y="140" text-anchor="middle" class="lbl">twin-wheel intake</text>
+
+  <!-- side brush front-left corner -->
+  <circle cx="228" cy="96" r="26" fill="none" stroke="#e0873a" stroke-width="2"/>
+  <g stroke="#e0873a" stroke-width="2.5">
+    <line x1="228" y1="96" x2="228" y2="72"/><line x1="228" y1="96" x2="250" y2="84"/>
+    <line x1="228" y1="96" x2="250" y2="108"/><line x1="228" y1="96" x2="228" y2="120"/>
+    <line x1="228" y1="96" x2="206" y2="108"/><line x1="228" y1="96" x2="206" y2="84"/>
+  </g>
+  <text x="150" y="96" class="lbl" fill="#b3671f">side brush</text>
+
+  <!-- hopper -->
+  <rect x="300" y="170" width="160" height="110" rx="10" fill="#f4f7d6" stroke="#8a9c00" stroke-width="2"/>
+  <g fill="#c8e000" stroke="#8a9c00">
+    <circle cx="326" cy="200" r="9"/><circle cx="350" cy="205" r="9"/><circle cx="376" cy="200" r="9"/>
+    <circle cx="402" cy="206" r="9"/><circle cx="428" cy="200" r="9"/><circle cx="338" cy="224" r="9"/>
+    <circle cx="364" cy="226" r="9"/><circle cx="392" cy="224" r="9"/><circle cx="418" cy="226" r="9"/>
+  </g>
+  <text x="380" y="262" text-anchor="middle" class="lbl">hopper (75–110 balls)</text>
+
+  <!-- drive wheels -->
+  <rect x="214" y="180" width="18" height="70" rx="5" fill="#c9d2db" stroke="#7c8894"/>
+  <rect x="528" y="180" width="18" height="70" rx="5" fill="#c9d2db" stroke="#7c8894"/>
+  <text x="196" y="270" class="lbl-s" transform="rotate(-90 196 270)">drive wheel</text>
+  <text x="556" y="176" class="lbl-s" transform="rotate(90 556 176)">drive wheel</text>
+
+  <!-- caster rear -->
+  <circle cx="380" cy="306" r="12" fill="#c9d2db" stroke="#7c8894"/>
+  <text x="380" y="340" text-anchor="middle" class="lbl-s">rear caster</text>
+
+  <!-- forward camera -->
+  <circle cx="380" cy="74" r="7" fill="#1f6feb"/>
+  <text x="470" y="78" class="lbl-s">forward camera</text>
+  <path class="lead" d="M388 74 L462 74"/>
+
+  <!-- width dim -->
+  <line x1="230" y1="352" x2="530" y2="352" stroke="#1f6feb" stroke-width="1"/>
+  <text x="380" y="368" text-anchor="middle" class="dim">~55–60 cm wide</text>
+</svg>
+<figcaption>Top view. Twin-wheel intake at the front center, side brush on the front corner for fence/corner balls, hopper in the middle, differential drive with a rear caster, forward homing camera. Roughly 55–60 cm wide so it stays maneuverable on one court.</figcaption>
+</figure>
+
+<h2>4. The camera + "find all the balls" program</h2>
+
+<p>Detection is the easy part, because optic yellow is the most distinctive color on a court — nothing else shares it. No heavy machine learning needed for v1; a straightforward color-vision pipeline does it:</p>
+
+<ul>
+  <li><strong>Overhead camera</strong> on a net post or fence, looking down at the whole court, is the backbone — it sees every ball at once and tracks the robot too.</li>
+  <li><strong>Color mask:</strong> filter each frame for the optic-yellow band (HSV threshold) → clean blobs → a list of ball positions in court coordinates.</li>
+  <li><strong>Route:</strong> a simple nearest-ball-next plan (greedy, with corner balls flagged for the brush routine) orders the pickups to minimize driving.</li>
+  <li><strong>Drive &amp; collect:</strong> robot drives to each ball; the <strong>forward onboard camera</strong> does the final centering into the intake mouth.</li>
+  <li><strong>Fallback:</strong> if a camera is blocked, the robot can still mow the whole rectangle in a back-and-forth pattern like a robot vacuum and sweep everything up.</li>
+</ul>
+
+<figure>
+<svg viewBox="0 0 760 340" role="img" aria-label="Detection pipeline and route">
+  <!-- camera on post -->
+  <line x1="60" y1="40" x2="60" y2="300" stroke="#7c8894" stroke-width="4"/>
+  <rect x="44" y="30" width="40" height="24" rx="4" fill="#243447"/>
+  <text x="64" y="22" text-anchor="middle" class="lbl-s">overhead cam</text>
+  <path d="M84 46 L150 90" class="lead" stroke-dasharray="4 4"/>
+  <path d="M84 50 L150 250" class="lead" stroke-dasharray="4 4"/>
+
+  <!-- court -->
+  <rect x="150" y="70" width="440" height="220" rx="6" fill="#e7f0ec" stroke="#2f7d5b" stroke-width="2"/>
+  <line x1="370" y1="70" x2="370" y2="290" stroke="#2f7d5b" stroke-width="1.5"/>
+  <text x="370" y="308" text-anchor="middle" class="lbl-s">one court, seen from above</text>
+
+  <!-- balls -->
+  <g fill="#c8e000" stroke="#8a9c00" stroke-width="1.5">
+    <circle cx="210" cy="120" r="8"/><circle cx="300" cy="200" r="8"/><circle cx="260" cy="250" r="8"/>
+    <circle cx="430" cy="110" r="8"/><circle cx="500" cy="180" r="8"/><circle cx="560" cy="250" r="8"/>
+    <circle cx="470" cy="250" r="8"/>
+  </g>
+  <!-- robot marker -->
+  <rect x="168" y="256" width="26" height="22" rx="5" fill="#1f6feb"/>
+  <text x="181" y="230" text-anchor="middle" class="lbl-s">robot</text>
+
+  <!-- greedy route -->
+  <path d="M181 267 L210 120 L300 200 L260 250 L430 110 L500 180 L470 250 L560 250"
+        fill="none" stroke="#1f6feb" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah5)"/>
+
+  <!-- pipeline boxes -->
+  <g font-family="sans-serif">
+    <rect x="620" y="80" width="120" height="34" rx="6" fill="#f6f8fa" stroke="#d9dee5"/>
+    <text x="680" y="101" text-anchor="middle" class="lbl-s">yellow mask</text>
+    <rect x="620" y="128" width="120" height="34" rx="6" fill="#f6f8fa" stroke="#d9dee5"/>
+    <text x="680" y="149" text-anchor="middle" class="lbl-s">ball coords</text>
+    <rect x="620" y="176" width="120" height="34" rx="6" fill="#f6f8fa" stroke="#d9dee5"/>
+    <text x="680" y="197" text-anchor="middle" class="lbl-s">nearest-ball route</text>
+    <rect x="620" y="224" width="120" height="34" rx="6" fill="#f6f8fa" stroke="#d9dee5"/>
+    <text x="680" y="245" text-anchor="middle" class="lbl-s">drive &amp; collect</text>
+    <path d="M680 114 L680 128" class="lead"/><path d="M680 162 L680 176" class="lead"/><path d="M680 210 L680 224" class="lead"/>
+  </g>
+
+  <defs>
+    <marker id="ah5" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#1f6feb"/></marker>
+  </defs>
+</svg>
+<figcaption>The overhead camera maps every ball to court coordinates; a greedy nearest-ball route orders the pickups; the robot drives to each and the forward camera centers the final approach.</figcaption>
+</figure>
+
+<h2>5. Electronics &amp; compute architecture</h2>
+
+<p>Ballbot splits its computing the standard robotics way: a Linux single-board computer (the "brain") handles the heavy, non-real-time perception and planning, while a small microcontroller runs the hard-real-time motor-and-sensor loop. That split matters — it means a momentary hiccup in the vision pipeline can never stall a motor command or delay the e-stop. In v1 the overhead camera stays dumb: it just streams frames over Wi-Fi to the onboard computer, which does all the processing.</p>
+
+<figure>
+<svg viewBox="0 0 960 620" role="img" aria-label="Electronics and compute block diagram">
+  <text x="140" y="30" text-anchor="middle" style="font:700 13px sans-serif;fill:#2f7d5b;letter-spacing:.1em">SENSING</text>
+  <text x="470" y="30" text-anchor="middle" style="font:700 13px sans-serif;fill:#0e1622;letter-spacing:.1em">COMPUTE</text>
+  <text x="810" y="30" text-anchor="middle" style="font:700 13px sans-serif;fill:#c0741f;letter-spacing:.1em">ACTUATION</text>
+  <rect x="25" y="48" width="230" height="46" rx="8" fill="#ffffff" stroke="#cfdbd4" stroke-width="1.5"/><rect x="25" y="48" width="6" height="46" rx="3" fill="#2f7d5b"/>
+  <text x="44" y="70" style="font:600 12.5px sans-serif;fill:#1c2530">Overhead camera</text><text x="44" y="86" style="font:11px sans-serif;fill:#6b7784">wide-angle, on net post · Wi-Fi</text>
+  <rect x="25" y="104" width="230" height="46" rx="8" fill="#ffffff" stroke="#cfdbd4" stroke-width="1.5"/><rect x="25" y="104" width="6" height="46" rx="3" fill="#2f7d5b"/>
+  <text x="44" y="126" style="font:600 12.5px sans-serif;fill:#1c2530">Forward camera</text><text x="44" y="142" style="font:11px sans-serif;fill:#6b7784">close-in ball homing</text>
+  <rect x="25" y="160" width="230" height="46" rx="8" fill="#ffffff" stroke="#cfdbd4" stroke-width="1.5"/><rect x="25" y="160" width="6" height="46" rx="3" fill="#2f7d5b"/>
+  <text x="44" y="182" style="font:600 12.5px sans-serif;fill:#1c2530">Downward camera</text><text x="44" y="198" style="font:11px sans-serif;fill:#6b7784">court-line localization</text>
+  <rect x="25" y="238" width="230" height="42" rx="8" fill="#ffffff" stroke="#cfdbd4" stroke-width="1.5"/><rect x="25" y="238" width="6" height="42" rx="3" fill="#2f7d5b"/>
+  <text x="44" y="264" style="font:600 12.5px sans-serif;fill:#1c2530">IMU + wheel encoders</text>
+  <rect x="25" y="288" width="230" height="42" rx="8" fill="#ffffff" stroke="#cfdbd4" stroke-width="1.5"/><rect x="25" y="288" width="6" height="42" rx="3" fill="#2f7d5b"/>
+  <text x="44" y="314" style="font:600 12.5px sans-serif;fill:#1c2530">Bump sensors + e-stop</text>
+  <rect x="25" y="338" width="230" height="42" rx="8" fill="#ffffff" stroke="#cfdbd4" stroke-width="1.5"/><rect x="25" y="338" width="6" height="42" rx="3" fill="#2f7d5b"/>
+  <text x="44" y="364" style="font:600 12.5px sans-serif;fill:#1c2530">Hopper-full + battery monitor</text>
+  <rect x="300" y="48" width="340" height="250" rx="12" fill="#f7fafc" stroke="#0e1622" stroke-width="1.6"/>
+  <rect x="300" y="48" width="340" height="30" rx="12" fill="#0e1622"/><rect x="300" y="64" width="340" height="14" fill="#0e1622"/>
+  <text x="316" y="68" style="font:700 12.5px sans-serif;fill:#c8e000">ONBOARD COMPUTER — SBC</text>
+  <text x="470" y="94" text-anchor="middle" style="font:11px sans-serif;fill:#5f6b78">Raspberry Pi 5 (classic CV) or Jetson Orin Nano (ML headroom)</text>
+  <rect x="316" y="104" width="308" height="30" rx="6" fill="#ffffff" stroke="#d7e6de"/><text x="470" y="123" text-anchor="middle" style="font:11.5px sans-serif;fill:#1c2530">① Frame capture (overhead + onboard)</text>
+  <rect x="316" y="140" width="308" height="30" rx="6" fill="#ffffff" stroke="#d7e6de"/><text x="470" y="159" text-anchor="middle" style="font:11.5px sans-serif;fill:#1c2530">② Optic-yellow HSV mask → blob detect</text>
+  <rect x="316" y="176" width="308" height="30" rx="6" fill="#ffffff" stroke="#d7e6de"/><text x="470" y="195" text-anchor="middle" style="font:11.5px sans-serif;fill:#1c2530">③ Homography → ball coords + robot pose</text>
+  <rect x="316" y="212" width="308" height="30" rx="6" fill="#ffffff" stroke="#d7e6de"/><text x="470" y="231" text-anchor="middle" style="font:11.5px sans-serif;fill:#1c2530">④ Route planner (nearest-ball, corner flags)</text>
+  <rect x="316" y="248" width="308" height="30" rx="6" fill="#ffffff" stroke="#d7e6de"/><text x="470" y="267" text-anchor="middle" style="font:11.5px sans-serif;fill:#1c2530">⑤ Motion controller → velocity commands</text>
+  <rect x="300" y="330" width="340" height="86" rx="12" fill="#eef3f8" stroke="#3b4a5d" stroke-width="1.6"/>
+  <text x="316" y="356" style="font:700 12.5px sans-serif;fill:#1c2530">REAL-TIME MICROCONTROLLER</text>
+  <text x="316" y="374" style="font:11px sans-serif;fill:#5f6b78">Teensy 4.1 / ESP32</text>
+  <text x="316" y="398" style="font:11px sans-serif;fill:#5f6b78">motor PWM · encoder reads · sensor polling · hardware e-stop</text>
+  <rect x="700" y="100" width="215" height="44" rx="8" fill="#ffffff" stroke="#e6c49a" stroke-width="1.5"/><rect x="700" y="100" width="6" height="44" rx="3" fill="#e0873a"/>
+  <text x="718" y="126" style="font:600 12.5px sans-serif;fill:#1c2530">Motor drivers (H-bridge)</text>
+  <rect x="700" y="176" width="215" height="40" rx="8" fill="#ffffff" stroke="#e6c49a" stroke-width="1.5"/><rect x="700" y="176" width="6" height="40" rx="3" fill="#e0873a"/>
+  <text x="718" y="200" style="font:12px sans-serif;fill:#1c2530">Left + right drive motors</text>
+  <rect x="700" y="224" width="215" height="40" rx="8" fill="#ffffff" stroke="#e6c49a" stroke-width="1.5"/><rect x="700" y="224" width="6" height="40" rx="3" fill="#e0873a"/>
+  <text x="718" y="248" style="font:12px sans-serif;fill:#1c2530">Intake motor (twin wheels)</text>
+  <rect x="700" y="272" width="215" height="40" rx="8" fill="#ffffff" stroke="#e6c49a" stroke-width="1.5"/><rect x="700" y="272" width="6" height="40" rx="3" fill="#e0873a"/>
+  <text x="718" y="296" style="font:12px sans-serif;fill:#1c2530">Side-brush motor</text>
+  <rect x="25" y="452" width="890" height="120" rx="12" fill="#fbfbe9" stroke="#d9dca0" stroke-width="1.5"/>
+  <text x="42" y="478" style="font:700 12.5px sans-serif;fill:#7a8500;letter-spacing:.1em">POWER</text>
+  <rect x="42" y="490" width="200" height="60" rx="8" fill="#ffffff" stroke="#dfe2b0"/><text x="142" y="516" text-anchor="middle" style="font:600 12px sans-serif;fill:#1c2530">12V LiFePO₄ battery</text><text x="142" y="534" text-anchor="middle" style="font:11px sans-serif;fill:#6b7784">~10Ah pack</text>
+  <rect x="258" y="490" width="200" height="60" rx="8" fill="#ffffff" stroke="#dfe2b0"/><text x="358" y="516" text-anchor="middle" style="font:600 12px sans-serif;fill:#1c2530">BMS / charge controller</text><text x="358" y="534" text-anchor="middle" style="font:11px sans-serif;fill:#6b7784">5V + 12V rails</text>
+  <rect x="474" y="490" width="200" height="60" rx="8" fill="#ffffff" stroke="#dfe2b0"/><text x="574" y="516" text-anchor="middle" style="font:600 12px sans-serif;fill:#1c2530">Solar panel</text><text x="574" y="534" text-anchor="middle" style="font:11px sans-serif;fill:#6b7784">20–30W trickle</text>
+  <rect x="690" y="490" width="200" height="60" rx="8" fill="#ffffff" stroke="#dfe2b0"/><text x="790" y="516" text-anchor="middle" style="font:600 12px sans-serif;fill:#1c2530">Dock contacts</text><text x="790" y="534" text-anchor="middle" style="font:11px sans-serif;fill:#6b7784">+ IR homing beacon</text>
+  <defs>
+    <marker id="za" markerWidth="9" markerHeight="9" refX="5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#8a97a6"/></marker>
+    <marker id="zag" markerWidth="9" markerHeight="9" refX="5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#2f7d5b"/></marker>
+    <marker id="zao" markerWidth="9" markerHeight="9" refX="5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#e0873a"/></marker>
+  </defs>
+  <path d="M255 71 L300 90" fill="none" stroke="#2f7d5b" stroke-width="1.6" marker-end="url(#zag)"/>
+  <path d="M255 127 L300 110" fill="none" stroke="#2f7d5b" stroke-width="1.6" marker-end="url(#zag)"/>
+  <path d="M255 183 L300 130" fill="none" stroke="#2f7d5b" stroke-width="1.6" marker-end="url(#zag)"/>
+  <text x="258" y="205" style="font:italic 10.5px sans-serif;fill:#2f7d5b">video →</text>
+  <path d="M255 259 L285 259 L285 360 L300 360" fill="none" stroke="#8a97a6" stroke-width="1.6" marker-end="url(#za)"/>
+  <path d="M255 309 L278 309 L278 372 L300 372" fill="none" stroke="#8a97a6" stroke-width="1.6" marker-end="url(#za)"/>
+  <path d="M255 359 L271 359 L271 384 L300 384" fill="none" stroke="#8a97a6" stroke-width="1.6" marker-end="url(#za)"/>
+  <path d="M470 298 L470 330" fill="none" stroke="#3b4a5d" stroke-width="2" marker-end="url(#za)"/>
+  <path d="M452 330 L452 300" fill="none" stroke="#3b4a5d" stroke-width="2" marker-end="url(#za)"/>
+  <text x="478" y="318" style="font:italic 10.5px sans-serif;fill:#3b4a5d">USB serial</text>
+  <path d="M640 355 L676 355 L676 122 L700 122" fill="none" stroke="#e0873a" stroke-width="1.8" marker-end="url(#zao)"/>
+  <path d="M807 144 L807 176" fill="none" stroke="#e0873a" stroke-width="1.6" marker-end="url(#zao)"/>
+  <path d="M807 144 L807 224" fill="none" stroke="#e0873a" stroke-width="1.6" marker-end="url(#zao)"/>
+  <path d="M807 144 L807 272" fill="none" stroke="#e0873a" stroke-width="1.6" marker-end="url(#zao)"/>
+  <path d="M142 490 L142 300 L300 220" fill="none" stroke="#c3c73f" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <path d="M790 490 L790 330" fill="none" stroke="#c3c73f" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <path d="M574 490 L574 416" fill="none" stroke="#c3c73f" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text x="600" y="446" style="font:italic 10.5px sans-serif;fill:#9aa300">12V / 5V power rails</text>
+</svg>
+<figcaption>Electronics block diagram. Cameras feed the SBC's vision pipeline; the SBC sends velocity commands to the microcontroller over USB serial; the microcontroller drives the motors and polls the safety sensors in hard real time. Power rails feed all three tiers.</figcaption>
+</figure>
+
+<h3>The compute split, concretely</h3>
+<ul>
+  <li><strong>Onboard computer (the brain):</strong> a Linux SBC — a Raspberry Pi 5 is ample for the classic OpenCV color-vision pipeline; step up to a Jetson Orin Nano only if we later add a learned detector for tricky lighting or heavy occlusion. Runs frame capture, the optic-yellow mask, homography to court coordinates, the route planner, and the motion controller.</li>
+  <li><strong>Real-time microcontroller:</strong> a Teensy 4.1 or ESP32 handling motor PWM, quadrature encoder reads, sensor polling, and a hardware e-stop. Talks to the SBC over USB serial, taking velocity commands and returning odometry.</li>
+  <li><strong>Overhead camera:</strong> kept dumb in v1 — streams frames to the SBC over Wi-Fi. A later version could push detection onto a small edge board at the camera to cut bandwidth.</li>
+  <li><strong>Vision stack:</strong> capture → HSV optic-yellow mask → contour/blob detection → homography (pixel→court, calibrated once off the four court corners) → robot pose from an overhead marker fused with onboard odometry/IMU → greedy nearest-ball route with corner flags → velocity commands.</li>
+</ul>
+
+<h3>Bill of materials (v1 prototype, ballpark)</h3>
+<table>
+  <tr><th>Subsystem</th><th>Component</th><th>Suggested part</th><th>~Cost</th></tr>
+  <tr><td>Compute</td><td>Onboard computer (brain)</td><td>Raspberry Pi 5 8GB <em>or</em> Jetson Orin Nano</td><td>$80–250</td></tr>
+  <tr><td>Compute</td><td>Real-time microcontroller</td><td>Teensy 4.1 / ESP32</td><td>$25</td></tr>
+  <tr><td>Vision</td><td>Overhead camera</td><td>Wide-angle IP cam / Pi HQ cam on Pi Zero 2 W</td><td>$60</td></tr>
+  <tr><td>Vision</td><td>Forward camera</td><td>Pi Camera Module 3 / USB webcam</td><td>$25</td></tr>
+  <tr><td>Vision</td><td>Downward camera</td><td>Small USB camera</td><td>$15</td></tr>
+  <tr><td>Drive</td><td>Motor drivers</td><td>Dual H-bridge (Cytron MDD10 / VNH5019)</td><td>$30</td></tr>
+  <tr><td>Drive</td><td>Drive motors ×2</td><td>12V gearmotors w/ encoders</td><td>$40</td></tr>
+  <tr><td>Drive</td><td>Intake motor</td><td>12V brushed gearmotor</td><td>$20</td></tr>
+  <tr><td>Drive</td><td>Side-brush motor</td><td>Small 12V gearmotor</td><td>$12</td></tr>
+  <tr><td>Sensing</td><td>IMU</td><td>BNO085 / MPU-6050</td><td>$15</td></tr>
+  <tr><td>Sensing</td><td>Bump, e-stop, hopper-full</td><td>Microswitches + IR break-beam / load cell</td><td>$20</td></tr>
+  <tr><td>Power</td><td>Battery</td><td>12V LiFePO₄ ~10Ah</td><td>$60</td></tr>
+  <tr><td>Power</td><td>BMS / charge controller</td><td>Off-the-shelf BMS + DC-DC</td><td>$20</td></tr>
+  <tr><td>Power</td><td>Solar panel</td><td>20–30W semi-flexible</td><td>$40</td></tr>
+  <tr><td>Power</td><td>Dock</td><td>Charging contacts + IR homing beacon</td><td>$25</td></tr>
+  <tr><td><strong>Total</strong></td><td colspan="2"><strong>Ballpark, one prototype</strong></td><td><strong>≈ $490–660</strong></td></tr>
+</table>
+<p><em>Rough prototype-quantity estimates; chassis, wheels, fasteners, and wiring extra. Not a production BOM.</em></p>
+
+<h2>6. Hopper — sizing to standard capacities</h2>
+
+<p>Rather than invent a size, we anchor to what teaching hoppers and carts already come in. Common commercial capacities: Gamma baskets ship in 50, 55, 75, 80, 90, 110, and 140; folding rolling teaching carts are typically 150. A standard lesson/drill basket is 50–75 balls, and a coach's cart is ~150.</p>
+
+<table>
+  <tr><th>Option</th><th>Capacity</th><th>Fits v1?</th></tr>
+  <tr><td>Small basket</td><td>50–55</td><td>Too many dump trips on a full court</td></tr>
+  <tr><td><strong>Mid basket (recommended)</strong></td><td><strong>75–110</strong></td><td><strong>Best balance of size vs. dump frequency</strong></td></tr>
+  <tr><td>Coach cart</td><td>140–150</td><td>Great capacity, but a taller/heavier robot</td></tr>
+</table>
+
+<p>Recommendation: design the hopper cavity around a <strong>standard 75–110 ball basket</strong> — enough to clear a typical loose-ball session in one or two trips without making the robot tall and tippy. Keeping it to an off-the-shelf basket size also means the removable bin can literally be a stock hopper we drop in and lift out to empty.</p>
+
+<h2>7. Open decisions for Tim &amp; Kevin</h2>
+<ul>
+  <li><strong>Intake bake-off:</strong> build both the twin-wheel and single-brush intakes as cheap prototypes and pick the winner — agreed?</li>
+  <li><strong>Hopper target:</strong> 75, 90, or 110 balls?</li>
+  <li><strong>Net:</strong> treat each half-court as a separate job (my rec) vs. ducking under the 3-ft center strap.</li>
+  <li><strong>When it runs:</strong> between sessions/drills (my rec) vs. during live play.</li>
+  <li><strong>Solar:</strong> confirm it's a bonus trickle-charger, with the corner dock as primary power.</li>
+</ul>
+
+<h2>8. Recommended v1 baseline</h2>
+<p>Fastest path to a demoable robot: <strong>twin-wheel bowling-alley intake</strong> with a funnel and scoop lip; a <strong>front-corner side brush</strong> plus wall-follow routine for fence and corner balls; an <strong>overhead camera + simple yellow-blob detector</strong> as the brain, with a forward camera for final homing; a <strong>standard 75–110 ball hopper</strong> as a drop-in bin; <strong>half-court jobs</strong>, <strong>run between sessions</strong>, and <strong>dock-primary power</strong> with a token solar panel. Smallest machine that convincingly does the core loop — and the platform every later feature bolts onto.</p>
+
+</div>
+</body>
+</html>
